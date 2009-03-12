@@ -1,0 +1,100 @@
+Sophpa
+======
+Sophpa is an Apache CouchDB interface for PHP5. The development has been 
+inspired from couchdb-python, Phly_Couch and jcouchdb. The current release
+is in an early state, put on github for feedback and/or contribution.
+Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
+
+
+Requirements
+------------
+PHP: 5.2.8, there seems to be a strange bug with ArrayObject in 5.2.6 at least
+PEAR: PHPUnit 3.3.*, not sure what version
+Extensions: ext/curl, there will be other http adapters in the future though
+
+Usage
+-----
+	<?php
+	require_once 'Sophpa/Http/Curl.php';
+	require_once 'Sophpa/Resource.php';
+	require_once 'Sophpa/Server.php';
+	
+	$http = new Sophpa_Http_Curl();
+	$resource = new Sophpa_Resource($http, 'http://eee:5984');
+	
+	$server = new Sophpa_Server($resource);
+	
+	print_r($server->listDatabases());
+	
+	/*
+	Array
+	(
+	[0] => user
+	[1] => test_suite_db
+	[2] => test_suite_db_b
+	[3] => test_suite_db/with_slashes
+	[4] => test_suite_db_a
+	)
+	 */
+	
+	$db = $server->createDatabase('test');
+	
+	// Count number of documents in database
+	echo count($db);
+	
+	// 0
+	
+	$tags = array(
+		'PHP',
+		'Python',
+		'Java',
+		'Ruby'
+	);
+	
+	for($i=0;$i<10;$i++) {
+		$db->create(array('content' => 'random article content', 'tag' => $tags[rand(0,3)]));
+	}
+	
+	echo count($db);
+	
+	// 10
+	
+	// Create and run a permanent view ("ad-hoc" (temporary view) support soon :)
+	// Smoother way of creating design docs coming too.
+	$designDoc = array(
+		'_id' => '_design/blog',
+		'language' => 'javascript',
+		'views' => array('tags' => array(
+			'map' => 'function(doc) {emit(doc.tag, 1);}',
+			'reduce' => 'function(tag, counts) {var sum = 0; for(var i=0; i < counts.length; i++) { sum += counts[i]; } return sum;}'
+		))
+	);
+	
+	$db->save($designDoc);
+	
+	// Check number of each tag present in postings
+	$view = $db->view('blog/tags', array('group' => 'true'));
+	
+	foreach($view as $row) {
+		print_r($row);
+	}
+	
+	/*
+	Sophpa_Row Object
+	(
+	    [key] => Java
+	    [value] => 2
+	)
+	Sophpa_Row Object
+	(
+	    [key] => PHP
+	    [value] => 5
+	)
+	Sophpa_Row Object
+	(
+	    [key] => Python
+	    [value] => 3
+	)
+	*/
+	
+	$server->deleteDatabase($db);

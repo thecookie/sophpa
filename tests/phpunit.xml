@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         syntaxCheck="false">
+    <testsuite name="Sophpa Test Suite">
+        <directory>./</directory>
+    </testsuite>
+    <php>
+        <!-- <ini name="include_path" value="../library"/> -->
+    </php>
+    <filter>
+	    <whitelist addUncoveredFilesFromWhitelist="true">
+	      <!--<directory suffix=".php">Sophpa</directory>-->
+	    </whitelist>
+   	</filter>
+    <logging>
+        <log type="coverage-html" target="./log/report" charset="UTF-8"
+            yui="true" highlight="true"
+            lowUpperBound="50" highLowerBound="80"/>
+        <log type="testdox-html" target="./log/testdox.html" />
+    </logging>
+</phpunit>

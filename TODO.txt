@@ -1,0 +1,15 @@
+Todo
+  Bulk save
+  Temporary views
+  Attachements
+  ArrayAccess of ViewResult?
+
+  Make URI handling prettier. Have an url object?
+  Handle docs from map-only viwes with include_docs=true
+  Revisions of documents
+  Smoother way of handling options?
+  Integration tests
+  Manager class for easy object creation?
+  Cache support in http adapter?
+  Multi request curl adapter?
+  Use Mockery?

@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+Date: Thu, 17 Aug 2006 05:39:28 +0000GMT
+Content-Type: application/json
+Connection: close
+
+{
+  "total_rows": 3, "offset": 0, "rows": [
+    {"id": "doc1", "key": "doc1", "value": {"rev": "4324BB"}},
+    {"id": "doc2", "key": "doc2", "value": {"rev":"2441HF"}},
+    {"id": "doc3", "key": "doc3", "value": {"rev":"74EC24"}}
+  ]
+}
