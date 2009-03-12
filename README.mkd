@@ -1,8 +1,8 @@
 Sophpa
 ======
 Sophpa is an Apache CouchDB interface for PHP5. The development has been 
-inspired from couchdb-python, Phly_Couch and jcouchdb. The current release
-is in an early state, put on github for feedback and/or contribution.
+inspired from couchdb-python, Phly_Couch and jcouchdb. It's currently in a
+pretty early form, put on github for feedback and/or contribution.
 Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
 
 
