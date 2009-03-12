@@ -9,7 +9,9 @@ Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
 Requirements
 ------------
 PHP: 5.2.8, there seems to be a strange bug with ArrayObject in 5.2.6 at least
+
 PEAR: PHPUnit 3.3.*, not sure what version
+
 Extensions: ext/curl, there will be other http adapters in the future though
 
 Usage
