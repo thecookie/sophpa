@@ -4,20 +4,23 @@
          backupStaticAttributes="false"
          syntaxCheck="false">
     <testsuite name="Sophpa Test Suite">
-        <directory>./</directory>
+        <directory>tests</directory>
     </testsuite>
     <php>
         <!-- <ini name="include_path" value="../library"/> -->
     </php>
-    <filter>
+    <!--<filter>
 	    <whitelist addUncoveredFilesFromWhitelist="true">
-	      <!--<directory suffix=".php">Sophpa</directory>-->
+	      <directory suffix=".php">Sophpa</directory>
+	      <exclude>
+	      	<file>Sophpa/Http.php</file>
+	      </exclude>
 	    </whitelist>
-   	</filter>
+   	</filter>-->
     <logging>
-        <log type="coverage-html" target="./log/report" charset="UTF-8"
+        <log type="coverage-html" target="tests/log/coverage" charset="UTF-8"
             yui="true" highlight="true"
             lowUpperBound="50" highLowerBound="80"/>
-        <log type="testdox-html" target="./log/testdox.html" />
+        <log type="testdox-html" target="tests/log/testdox.html" />
     </logging>
 </phpunit>

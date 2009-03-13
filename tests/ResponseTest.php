@@ -40,7 +40,7 @@ class Sophpa_ResponseTest extends PHPUnit_Framework_TestCase
 
 	public function testShouldCreateResponseFromRaw()
 	{
-		$rawResponse = file_get_contents('./_files/rawResponse.txt');
+		$rawResponse = file_get_contents('tests/_files/rawResponse.txt');
 		try {
 			$response = Sophpa_Response::createFromRaw($rawResponse);
 			
