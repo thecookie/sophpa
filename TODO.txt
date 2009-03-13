@@ -1,6 +1,5 @@
 Todo
   Bulk save
-  Temporary views
   Attachements
   ArrayAccess of ViewResult?
 

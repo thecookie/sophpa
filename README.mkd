@@ -1,8 +1,8 @@
 Sophpa
 ======
 Sophpa is an Apache CouchDB interface for PHP5. The development has been 
-inspired from couchdb-python, Phly_Couch and jcouchdb. It's currently in a
-pretty early form, put on github for feedback and/or contribution.
+inspired by couchdb-python, Phly_Couch and jcouchdb. It's currently in a
+pretty early state, put on github for feedback and/or contribution.
 Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
 
 
@@ -61,21 +61,11 @@ Usage
 	
 	// 10
 	
-	// Create and run a permanent view ("ad-hoc" (temporary view) support soon :)
-	// Smoother way of creating design docs coming too.
-	$designDoc = array(
-		'_id' => '_design/blog',
-		'language' => 'javascript',
-		'views' => array('tags' => array(
-			'map' => 'function(doc) {emit(doc.tag, 1);}',
-			'reduce' => 'function(tag, counts) {var sum = 0; for(var i=0; i < counts.length; i++) { sum += counts[i]; } return sum;}'
-		))
-	);
-	
-	$db->save($designDoc);
-	
-	// Check number of each tag present in postings
-	$view = $db->view('blog/tags', array('group' => 'true'));
+	// Query the database using a temporary view. Count the occurances of tags in posts.
+	$map = 'function(doc) {emit(doc.tag, 1);}';
+	$reduce = 'function(tag, counts) {var sum = 0; for(var i=0; i < counts.length; i++) { sum += counts[i]; } return sum;}';
+
+	$view = $db->query($map, $reduce, array('group' => 'true'));
 	
 	foreach($view as $row) {
 		print_r($row);

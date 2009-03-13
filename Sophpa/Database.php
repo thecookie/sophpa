@@ -111,7 +111,7 @@ class Sophpa_Database implements Countable
 	 * Update and/or create a set of documents
 	 *
 	 */
-	public function bulkSave($documents)
+	public function bulkUpdate($documents)
 	{
 
 	}
@@ -178,6 +178,30 @@ class Sophpa_Database implements Countable
 		
 		return new Sophpa_ViewResult(
 			new Sophpa_View_Permanent($resource, $name),
+			$options
+		);
+	}
+
+	/**
+	 * Query a temporary view
+	 *
+	 * @param $map string
+	 * @param $reduce string
+	 * @param $language string
+	 */
+	public function query($map, $reduce = null, array $options = array(), $language = 'javascript')
+	{
+		require_once 'Sophpa/Util.php';
+		require_once 'Sophpa/ViewResult.php';
+		require_once 'Sophpa/View/Temporary.php';
+
+		$resource = new Sophpa_Resource(
+			$this->resource->http,
+			Sophpa_Util::uri($this->resource->uri, '_temp_view')
+		);
+		
+		return new Sophpa_ViewResult(
+			new Sophpa_View_Temporary($resource, $map, $reduce, $language),
 			$options
 		);
 	}

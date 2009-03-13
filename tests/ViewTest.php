@@ -2,16 +2,17 @@
 
 require_once 'PHPUnit/Framework.php';
 require_once 'Sophpa/View/Permanent.php';
+require_once 'Sophpa/View/Temporary.php';
 
 class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 {
-	protected $stubResource;
+	protected $stubRes;
 
 	protected function setUp()
 	{
 		$http = $this->getMock('Sophpa_Http');
 
-		$this->stubResource = $this->getMock(
+		$this->stubRes = $this->getMock(
 			'Sophpa_Resource',
 			array('delete','get', 'head','post', 'put', '__toString'),
 			array($http, 'http://localhost:5984/')
@@ -27,7 +28,7 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 
 	public function testCreatesPermanentView()
 	{
-		$view = new Sophpa_View_Permanent($this->stubResource);
+		$view = new Sophpa_View_Permanent($this->stubRes);
 		
 		$this->assertTrue($view instanceof Sophpa_View_Permanent);
 	}
@@ -41,23 +42,23 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 			'descending' => true,
 			'key' => 'd7b29022653ffe9da88cb6b969be1784'
 		);
-		$view = new Sophpa_View_Permanent($this->stubResource);
-
-		$options = $view->encodeOptions($options);
+		$expectedOptions = array(
+			'limit' => 7,
+			'endkey' => 12345,
+			'startkey' => '"someusername"',
+			'descending' => true,
+			'key' => '"d7b29022653ffe9da88cb6b969be1784"'
+		);
+		$view = new Sophpa_View_Permanent($this->stubRes);
 		
-		$this->assertEquals(7, $options['limit']);
-		$this->assertEquals(12345, $options['endkey']);
-		$this->assertEquals('"someusername"', $options['startkey']);
-		$this->assertEquals(true, $options['descending']);
-		$this->assertEquals('"d7b29022653ffe9da88cb6b969be1784"', $options['key']);
+		$this->assertEquals($expectedOptions, $view->encodeOptions($options));
 	}
 
 	public function testQueriesPermanentViewWithoutOptions()
 	{
-		$this->stubResource->expects($this->once())->method('get');
+		$this->stubRes->expects($this->once())->method('get');
 
-		$view = new Sophpa_View_Permanent($this->stubResource);
-
+		$view = new Sophpa_View_Permanent($this->stubRes);
 		$view->query();
 	}
 
@@ -65,12 +66,11 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 	{
 		$options = array('descending' => true, 'limit' => 50);
 		
-		$this->stubResource	->expects($this->once())
-							->method('get')
-							->with($this->anything(), $this->anything(), $this->contains(50));
+		$this->stubRes->expects($this->once())
+					  ->method('get')
+					  ->with($this->anything(), $this->equalTo(array()), $this->equalTo($options));
 		
-		$view = new Sophpa_View_Permanent($this->stubResource);
-
+		$view = new Sophpa_View_Permanent($this->stubRes);
 		$view->query($options);
 	}
 
@@ -81,13 +81,58 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 			'limit' => 50,
 			'keys' => array('somekey', 'someotherkey')
 		);
+		$this->stubRes->expects($this->once())
+					  ->method('post')
+					  ->with($this->anything(), $this->arrayHasKey('keys'), $this->anything(), $this->contains(50));
 
-		$this->stubResource	->expects($this->once())
-							->method('post')
-							->with($this->anything(), $this->arrayHasKey('keys'), $this->anything(), $this->contains(50));
+		$view = new Sophpa_View_Permanent($this->stubRes);
+		$view->query($options);
+	}
 
-		$view = new Sophpa_View_Permanent($this->stubResource);
+	public function testCreatesTemporaryView()
+	{
+		$view = new Sophpa_View_Temporary($this->stubRes, 'mapFunc');
+		
+		$this->assertTrue($view instanceof Sophpa_View_Temporary);
+	}
 
+	public function testQueriesTemporaryViewWithoutOptions()
+	{
+		$this->stubRes->expects($this->once())
+					  ->method('post')
+					  ->with(
+							$this->anything(),
+							$this->equalTo(array('map'=> 'mapFunc', 'reduce' => 'reduceFunc', 'language' => 'javascript')),
+							$this->anything()
+					  );
+		
+		$view = new Sophpa_View_Temporary($this->stubRes, 'mapFunc', 'reduceFunc');
+		$view->query();
+	}
+
+	public function testQueriesTemporaryViewWithKeysOption()
+	{
+		$options = array(
+			'descending' => true,
+			'limit' => 50,
+			'keys' => array('somekey', 'someotherkey')
+		);
+		$expectedBody = array(
+			'map'=> 'mapFunc',
+			'reduce' => 'reduceFunc',
+			'language' => 'javascript', 
+			'keys' => array('somekey', 'someotherkey')
+		);
+		$this->stubRes->expects($this->once())
+					  ->method('post')
+					  ->with(
+							$this->anything(),
+							$this->equalTo($expectedBody),
+							$this->anything(),
+							$this->equalTo(array('descending' => true, 'limit' => 50))
+						);
+		
+		$view = new Sophpa_View_Temporary($this->stubRes, 'mapFunc', 'reduceFunc');
 		$view->query($options);
 	}
 }
