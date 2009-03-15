@@ -15,7 +15,7 @@ class Sophpa_ViewResult implements Countable, Iterator
 	protected $rawResult;
 	protected $totalRows;
 	
-	protected $pointer;
+	protected $pointer = 0;
 	protected $rowObjects;
 
 	public function __construct(Sophpa_View $view, array $options = array())
@@ -42,7 +42,7 @@ class Sophpa_ViewResult implements Countable, Iterator
 		if(!$this->rawResult) {
 			$this->fetch();
 		}
-		
+
 		if($id >= $this->totalRows || $id < 0) {
 			return null;
 		}

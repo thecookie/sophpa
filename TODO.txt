@@ -2,6 +2,7 @@ Todo
   Bulk save
   Attachements
   ArrayAccess of ViewResult?
+  HTTP auth
 
   Make URI handling prettier. Have an url object?
   Handle docs from map-only viwes with include_docs=true

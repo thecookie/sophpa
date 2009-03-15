@@ -1,16 +1,19 @@
 Sophpa
 ======
-Sophpa is an Apache CouchDB interface for PHP5. The development has been 
-inspired by couchdb-python, Phly_Couch and jcouchdb. It's currently in a
-pretty early state, put on github for feedback and/or contribution.
-Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
+Sophpa is an [Apache CouchDB](http://couchdb.apache.org/ "Visit the Apache CouchDB homepage")
+interface for PHP5.
 
+>Apache CouchDB is a distributed, fault-tolerant and schema-free document-oriented database accessible via a RESTful HTTP/JSON API. 
+
+The development has been inspired by couchdb-python, Phly_Couch and jcouchdb.
+Sophpa is currently in a pretty early state, put on github for feedback and/or
+contribution. Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
 
 Requirements
 ------------
 PHP: 5.2.8, there seems to be a strange bug with ArrayObject in 5.2.6 at least
 
-PEAR: PHPUnit 3.3.*, not sure what version
+PEAR: PHPUnit 3.3.*
 
 Extensions: ext/curl, there will be other http adapters in the future though
 
@@ -22,7 +25,7 @@ Usage
 	require_once 'Sophpa/Server.php';
 	
 	$http = new Sophpa_Http_Curl();
-	$resource = new Sophpa_Resource($http, 'http://eee:5984');
+	$resource = new Sophpa_Resource($http, 'http://localhost:5984');
 	
 	$server = new Sophpa_Server($resource);
 	
