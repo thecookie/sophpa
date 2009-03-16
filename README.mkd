@@ -64,7 +64,7 @@ Usage
 	
 	// 10
 	
-	// Query the database using a temporary view. Count the occurances of tags in posts.
+	// Query the database using a temporary view. Count the occurrences of tags in posts.
 	$map = 'function(doc) {emit(doc.tag, 1);}';
 	$reduce = 'function(tag, counts) {var sum = 0; for(var i=0; i < counts.length; i++) { sum += counts[i]; } return sum;}';
 
