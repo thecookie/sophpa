@@ -10,9 +10,9 @@ class Sophpa_Document extends ArrayObject
 	protected $data;
 
 	/**
-	 * Enter description here...
+	 * Constructor
 	 *
-	 * @param string|array $data
+	 * @param array|string $data
 	 * @throws InvalidArgumentException
 	 */
 	public function __construct($data)

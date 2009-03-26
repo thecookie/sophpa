@@ -88,10 +88,9 @@ class Sophpa_Database implements Countable
 	}
 
 	/**
-	 * Update or create a document based on id
-	 * 
-	 * The data must contain a _id field. When used to update, a _rev field 
-	 * must be present.
+	 * Update or create a document. The data must contain an _id field. When used
+	 * to update, a _rev field must be present. The _id and _rev field will get
+	 * updated if a Sophpa_Document based object is used.
 	 *
 	 * @param Sophpa_Document|array $data
 	 * @return void
@@ -99,9 +98,10 @@ class Sophpa_Database implements Countable
 	public function save($data)
 	{
 		$response = $this->resource->put($data['_id'], $data);
-		$content = $response->getContent();
 
 		if($data instanceof Sophpa_Document) {
+			$content = $response->getContent();
+
 			$data['_id'] = $content['id'];
 			$data['_rev'] = $content['rev'];
 		}
@@ -110,8 +110,9 @@ class Sophpa_Database implements Countable
 	/**
 	 * Update and/or create a set of documents
 	 *
+	 * @param array $documents
 	 */
-	public function bulkUpdate($documents)
+	public function bulkSave(array $documents)
 	{
 
 	}
@@ -119,7 +120,7 @@ class Sophpa_Database implements Countable
 	/**
 	 * Create a new document with a server generated ID
 	 *
-	 * @param string|array|Sophpa_Document $data
+	 * @param Sophpa_Document|array|string $data
 	 * @return int id
 	 */ 
 	public function create($data)
@@ -144,7 +145,7 @@ class Sophpa_Database implements Countable
 	 */
 	public function delete($docOrId, $rev = null)
 	{
-		$id = isset($docOrId['_id']) ? $docOrId['_id'] : $docOrId;
+		$id = $docOrId instanceof Sophpa_Document ? $docOrId['_id'] : $docOrId;
 		$rev = is_null($rev) ? array() : array('rev' => $rev);
 		
 		$this->resource->delete($id, array(), $rev);

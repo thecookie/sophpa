@@ -83,6 +83,19 @@ class Sophpa_Server
 		return $content['version'];
 	}
 
+	/**
+	 * Retrive a list of server generated UUIDs
+	 *
+	 * @param int $count
+	 * @return array
+	 */
+	public function getUuids($count = 1)
+	{
+		$content = $this->resource->get('_uuids', array(), array('count' => $count))->getContent();
+
+		return $content['uuids'];
+	}
+
 	public function __toString()
 	{
 		return sprintf('%s %s', get_class(), $this->resource);
