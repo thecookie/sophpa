@@ -43,6 +43,10 @@ class Sophpa_Http_Curl implements Sophpa_Http
 
 		curl_close($handle);
 
+		if (stripos($response, "HTTP/1.1 100 Continue\r\n\r\n") !== false) {
+			$response = str_ireplace("HTTP/1.1 100 Continue\r\n\r\n", '', $response);
+		}
+
 		require_once 'Sophpa/Response.php';
 		return Sophpa_Response::createFromRaw($response);
 	}

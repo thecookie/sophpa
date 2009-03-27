@@ -34,7 +34,7 @@ class Sophpa_Response
 			$headers[$key] = $value;
 		}
 		
-		return new self($status, $header, $body);
+		return new self($status, $headers, $body);
 	}
 
 	/**
