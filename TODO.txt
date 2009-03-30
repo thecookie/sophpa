@@ -1,7 +1,6 @@
 Todo
   Bulk save
   Attachements
-  ArrayAccess of ViewResult?
   HTTP auth
 
   Make URI handling prettier. Have an url object?
@@ -9,7 +8,6 @@ Todo
   Revisions of documents
   Smoother way of handling options?
   Integration tests
-  Manager class for easy object creation?
   Cache support in http adapter?
   Multi request curl adapter?
   Use Mockery?

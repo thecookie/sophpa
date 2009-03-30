@@ -17,33 +17,32 @@ class Sophpa_Server
 	}
 
 	/**
-	 * Get a list of databases of given server
+	 * Get a list of databases
 	 *
 	 * @return array
 	 */	
 	public function listDatabases()
 	{
-		$response = $this->resource->get('/_all_dbs');
-
-		return $response->getContent();
+		return $this->resource->get('/_all_dbs')->getContent();
 	}
 
 	/**
-	 * Get an instance of given database name
+	 * Get an instance of given database
 	 *
+	 * @param string $name
 	 * @return Sophpa_Database
 	 */
 	public function getDatabase($name)
 	{
 		require_once 'Sophpa/Database.php';
-		require_once 'Sophpa/Util.php';
+//		require_once 'Sophpa/Util.php';
+//		
+//		$resource = new Sophpa_Resource(
+//			$this->resource->http,
+//			Sophpa_Util::uri($this->resource->uri, $name)
+//		);
 		
-		$resource = new Sophpa_Resource(
-			$this->resource->http,
-			Sophpa_Util::uri($this->resource->uri, $name)
-		);
-		
-		return new Sophpa_Database($resource, $name);
+		return new Sophpa_Database($this, $name);
 	}
 
 	/**
@@ -60,9 +59,9 @@ class Sophpa_Server
 	}
 
 	/**
-	 * Delete a database with the given name
+	 * Delete a database
 	 *
-	 * @param string|Sophpa_Database $database
+	 * @param Sophpa_Database|string $db
 	 * @return void
 	 */
 	public function deleteDatabase($db)
@@ -91,13 +90,8 @@ class Sophpa_Server
 	 */
 	public function getUuids($count = 1)
 	{
-		$content = $this->resource->get('_uuids', array(), array('count' => $count))->getContent();
+		$content = $this->resource->get('_uuids', array('count' => $count))->getContent();
 
 		return $content['uuids'];
-	}
-
-	public function __toString()
-	{
-		return sprintf('%s %s', get_class(), $this->resource);
 	}
 }

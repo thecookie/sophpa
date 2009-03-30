@@ -1,6 +1,6 @@
 Sophpa
 ======
-Sophpa is an [Apache CouchDB](http://couchdb.apache.org/ "Visit the Apache CouchDB homepage")
+Sophpa is a leightweight [Apache CouchDB](http://couchdb.apache.org/ "Visit the Apache CouchDB homepage")
 interface for PHP5.
 
 >Apache CouchDB is a distributed, fault-tolerant and schema-free document-oriented database accessible via a RESTful HTTP/JSON API. 

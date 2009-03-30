@@ -12,7 +12,7 @@ class Sophpa_Resource
 	public $uri;
 
 	/**
-	 * Enter description here...
+	 * Constructor
 	 *
 	 * @param Sophpa_Http $http
 	 * @param string $uri
@@ -31,7 +31,7 @@ class Sophpa_Resource
 	 * @param array $param
 	 * @return Sophpa_Response 
 	 */
-	public function delete($path, array $header = array(), array $param = array())
+	public function delete($path, array $param = array(), array $header = array())
 	{
 		return $this->request('DELETE', $path, null, $header, $param);
 	}
@@ -44,7 +44,7 @@ class Sophpa_Resource
 	 * @param array $param
 	 * @return Sophpa_Response
 	 */
-	public function get($path, array $header = array(), array $param = array())
+	public function get($path, array $param = array(), array $header = array())
 	{
 		return $this->request('GET', $path, null, $header, $param);
 	}
@@ -57,7 +57,7 @@ class Sophpa_Resource
 	 * @param array $param
 	 * @return Sophpa_Response
 	 */
-	public function head($path, array $header = array(), array $param = array())
+	public function head($path, array $param = array(), array $header = array())
 	{
 		return $this->request('HEAD', $path, null, $header, $param);
 	}
@@ -71,7 +71,7 @@ class Sophpa_Resource
 	 * @param array $param
 	 * @return Sophpa_Response
 	 */
-	public function post($path, $content, array $header = array(), array $param = array())
+	public function post($path, $content, array $param = array(), array $header = array())
 	{
 		return $this->request('POST', $path, $content, $header, $param);
 	}
@@ -85,7 +85,7 @@ class Sophpa_Resource
 	 * @param array $param
 	 * @return Sophpa_Response
 	 */
-	public function put($path, $content = null, array $header = array(), array $param = array())
+	public function put($path, $content = null, array $param = array(), array $header = array())
 	{
 		return $this->request('PUT', $path, $content, $header, $param);
 	}

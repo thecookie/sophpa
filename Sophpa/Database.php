@@ -4,6 +4,32 @@ require_once 'Sophpa/Resource.php';
 
 class Sophpa_Database implements Countable 
 {
+	const VIEW_OPTION_DESCENDING = 'descending';
+	const VIEW_OPTION_ENDKEY = 'endkey';
+	const VIEW_OPTION_ENDKEY_DOCID = 'endkey_docid';
+	const VIEW_OPTION_GROUP = 'group';
+	const VIEW_OPTION_GROUP_LEVEL = 'group_level';
+	const VIEW_OPTION_INCLUDE_DOCS = 'include_docs';
+	const VIEW_OPTION_KEY = 'key';
+	const VIEW_OPTION_KEYS = 'keys';
+	const VIEW_OPTION_LIMIT = 'limit';
+	const VIEW_OPTION_REDUCE = 'reduce';
+	const VIEW_OPTION_SKIP = 'skip';
+	const VIEW_OPTION_STALE = 'stale';
+	const VIEW_OPTION_STARTKEY = 'startkey';
+	const VIEW_OPTION_STARTKEY_DOCID = 'startkey_docid';
+
+	/**
+	 * Contains options to be JSON encoded, used in encodeOptions()
+	 *
+	 * @var array
+	 */
+	protected static $encode = array(
+		self::VIEW_OPTION_KEY,
+		self::VIEW_OPTION_STARTKEY,
+		self::VIEW_OPTION_ENDKEY
+	);
+
 	/**
 	 * Holds the injected resource
 	 *
@@ -11,6 +37,11 @@ class Sophpa_Database implements Countable
 	 */
 	protected $resource;
 
+	/**
+	 * The name of the database
+	 *
+	 * @var string
+	 */
 	protected $name;
 
 	/**
@@ -22,7 +53,6 @@ class Sophpa_Database implements Countable
 	public function __construct(Sophpa_Resource $resource, $name = null)
 	{
 		$this->resource = $resource;
-		// @todo verify name
 		$this->name = $name;
 	}
 
@@ -61,23 +91,21 @@ class Sophpa_Database implements Countable
 	}
 
 	/**
-	 * Get a document based on its ID
+	 * Get a document based on its id
 	 *
 	 * @param string $id
 	 * @param array $options
-	 * @return Sophpa_Document
+	 * @return array
 	 */
 	public function get($id, array $options = array())
 	{
-		$content = $this->resource->get($id, array(), $options)->getContent();
+		$response = $this->resource->get($id, $options);
 		
-		require_once 'Sophpa/Document.php';
-		
-		return new Sophpa_Document($content);
+		return $response->getContent();
 	}
 
 	/**
-	 * Query the _all_docs view
+	 * Query the _all_docs view to get all documents in the database
 	 *
 	 * @param array $options
 	 * @return Sophpa_ViewResult
@@ -89,22 +117,20 @@ class Sophpa_Database implements Countable
 
 	/**
 	 * Update or create a document. The data must contain an _id field. When used
-	 * to update, a _rev field must be present. The _id and _rev field will get
-	 * updated if a Sophpa_Document based object is used.
+	 * to update, a _rev field must be present.
 	 *
-	 * @param Sophpa_Document|array $data
-	 * @return void
+	 * @param array $data
+	 * @return array
 	 */
 	public function save($data)
 	{
+		if(!isset($data['_id'])) {
+			throw new Sophpa_Exception('At least the _id key has to be set when using save');
+		}
+		
 		$response = $this->resource->put($data['_id'], $data);
 
-		if($data instanceof Sophpa_Document) {
-			$content = $response->getContent();
-
-			$data['_id'] = $content['id'];
-			$data['_rev'] = $content['rev'];
-		}
+		return $response->getContent();
 	}
 
 	/**
@@ -120,8 +146,8 @@ class Sophpa_Database implements Countable
 	/**
 	 * Create a new document with a server generated ID
 	 *
-	 * @param Sophpa_Document|array|string $data
-	 * @return int id
+	 * @param array|string $data
+	 * @return array
 	 */ 
 	public function create($data)
 	{
@@ -131,24 +157,18 @@ class Sophpa_Database implements Countable
 			$data = new ArrayObject($data);
 		}
 
-		$response = $this->resource->post('/', $data)->getContent();
-
-		return $response['id'];
+		return $this->resource->post('/', $data)->getContent();
 	}
 
 	/**
-	 * Delete a document based on ID. 
+	 * Delete a document 
 	 *
-	 * @param Sophpa_Document|string $docOrId
-	 * @param string $rev
+	 * @param array $doc
 	 * @return void
 	 */
-	public function delete($docOrId, $rev = null)
+	public function delete(array $doc)
 	{
-		$id = $docOrId instanceof Sophpa_Document ? $docOrId['_id'] : $docOrId;
-		$rev = is_null($rev) ? array() : array('rev' => $rev);
-		
-		$this->resource->delete($id, array(), $rev);
+		$this->resource->delete($doc['_id'], array('rev' => $doc['_rev']));
 	}
 
 	/**
@@ -156,31 +176,29 @@ class Sophpa_Database implements Countable
 	 * 
 	 * Format of the name is design/view
 	 *
-	 * @todo This needs som cleaning up
 	 * @param string $name
 	 * @param array $options
-	 * @return Sophpa_ViewResult
+	 * @return array
 	 */
 	public function view($name, array $options = array())
 	{
-		require_once 'Sophpa/Util.php';
-		require_once 'Sophpa/ViewResult.php';
-		require_once 'Sophpa/View/Permanent.php';
-		
 		if(substr($name, 0, 1) != '_') {
 			$parts = explode('/', $name);
 			$name = '_design/' . $parts[0] . '/_view/' . $parts[1];
 		}
 
-		$resource = new Sophpa_Resource(
-			$this->resource->http,
-			Sophpa_Util::uri($this->resource->uri, $name)
-		);
-		
-		return new Sophpa_ViewResult(
-			new Sophpa_View_Permanent($resource, $name),
-			$options
-		);
+		if(!count($options)) {
+			return $this->resource->get($name)->getContent();
+		}
+
+		if(!array_key_exists(self::VIEW_OPTION_KEYS, $options)) {
+			return $this->resource->get($name, $this->encodeOptions($options))->getContent();
+		}
+			
+		$keys[self::VIEW_OPTION_KEYS] = $options[self::VIEW_OPTION_KEYS];
+		unset($options[self::VIEW_OPTION_KEYS]);
+
+		return $this->resource->post($name, $keys, $this->encodeOptions($options))->getContent();
 	}
 
 	/**
@@ -189,22 +207,46 @@ class Sophpa_Database implements Countable
 	 * @param $map string
 	 * @param $reduce string
 	 * @param $language string
+	 * @return array
 	 */
 	public function query($map, $reduce = null, array $options = array(), $language = 'javascript')
 	{
-		require_once 'Sophpa/Util.php';
-		require_once 'Sophpa/ViewResult.php';
-		require_once 'Sophpa/View/Temporary.php';
+		$body = array(
+			'map' => $map,
+			'reduce' => $reduce,
+			'language' => $language
+		);
 
-		$resource = new Sophpa_Resource(
-			$this->resource->http,
-			Sophpa_Util::uri($this->resource->uri, '_temp_view')
+		if(array_key_exists(self::VIEW_OPTION_KEYS, $options)) {
+			$body[self::VIEW_OPTION_KEYS] = $options[self::VIEW_OPTION_KEYS];
+			unset($options[self::VIEW_OPTION_KEYS]);
+		}
+
+		$response = $this->resource->post(
+			'_temp_view',
+			$body,
+			$this->encodeOptions($options),
+			array('Content-Type' => 'application/json')
 		);
-		
-		return new Sophpa_ViewResult(
-			new Sophpa_View_Temporary($resource, $map, $reduce, $language),
-			$options
-		);
+
+		return $response->getContent();
+	}
+
+	/**
+	 * CouchDB wants some query string options json encoded
+	 *
+	 * @param array $options
+	 * @return array
+	 */
+	public function encodeOptions(array $options)
+	{
+		foreach($options as $key => &$value) {
+			if(in_array($key, self::$encode)) {
+				$value = json_encode($value);
+			}
+		}
+
+		return $options;
 	}
 
 	/**

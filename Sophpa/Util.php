@@ -5,18 +5,21 @@ class Sophpa_Util
 	/**
 	 * Assembles a url from 3 given parts
 	 * 
-	 * @todo Add support for unicode
 	 * @param string $base
-	 * @param string $path
+	 * @param array|string $path
 	 * @param array $query
 	 * @return string URL
 	 */
-	public static function uri($base, $path = null, $query = null)
+	public static function uri($base, $path = null, array $query = array())
 	{
 		$uri = rtrim($base, '/');
 		
-		$uri .= '/' . trim($path, '/');
-		
+		if(is_array($path)) {
+			$uri .= '/' . implode('/', trim($path, '/'));
+		} else {
+			$uri .= '/' . trim($path, '/');
+		}
+
 		if($query) {
 			$uri .= '?' . http_build_query($query);
 		}

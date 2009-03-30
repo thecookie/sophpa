@@ -14,7 +14,7 @@ class Sophpa_Response
 	}
 	
 	/**
-	 * Create a response object from raw http response
+	 * Create a response object from a raw http response
 	 *
 	 * @param string $rawResponse
 	 * @return Sophpa_Response
@@ -47,11 +47,22 @@ class Sophpa_Response
 		return $this->status;
 	}	
 
+	/**
+	 * Get the http headers in array form
+	 *
+	 * @return array
+	 */
 	public function getHeaders()
 	{
 		return $this->header;
 	}
 
+	/**
+	 * Get a single specific header value 
+	 *
+	 * @param string $header
+	 * @return string
+	 */
 	public function getHeader($header)
 	{
 		$header = ucwords(strtolower($header));

@@ -101,15 +101,4 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertEquals('0.9.0a749067', $server->getVersion());
 	}
-
-	public function testShouldGetTheCorrectStringRepresentation()
-	{
-		$this->stubResource->expects($this->any())
-							->method('__toString')
-							->will($this->returnValue('http://localhost:5984/'));
-
-		$server = new Sophpa_Server($this->stubResource);
-		
-		$this->assertEquals('Sophpa_Server http://localhost:5984/', sprintf('%s', $server));
-	}
 }
