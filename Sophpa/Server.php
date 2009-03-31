@@ -17,13 +17,23 @@ class Sophpa_Server
 	}
 
 	/**
+	 * Get the injected resource
+	 *
+	 * @return Sophpa_Resource
+	 */
+	public function getResource()
+	{
+		return $this->resource;
+	}
+
+	/**
 	 * Get a list of databases
 	 *
 	 * @return array
 	 */	
 	public function listDatabases()
 	{
-		return $this->resource->get('/_all_dbs')->getContent();
+		return $this->resource->get('_all_dbs')->getContent();
 	}
 
 	/**
@@ -35,12 +45,6 @@ class Sophpa_Server
 	public function getDatabase($name)
 	{
 		require_once 'Sophpa/Database.php';
-//		require_once 'Sophpa/Util.php';
-//		
-//		$resource = new Sophpa_Resource(
-//			$this->resource->http,
-//			Sophpa_Util::uri($this->resource->uri, $name)
-//		);
 		
 		return new Sophpa_Database($this, $name);
 	}
@@ -66,7 +70,7 @@ class Sophpa_Server
 	 */
 	public function deleteDatabase($db)
 	{
-		$this->resource->delete($db);
+		$this->resource->delete((string)$db);
 		unset($db);
 	}
 	

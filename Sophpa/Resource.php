@@ -9,6 +9,9 @@ class Sophpa_Resource
 	 */
 	public $http;
 
+	/**
+	 * @var string
+	 */
 	public $uri;
 
 	/**
@@ -27,8 +30,9 @@ class Sophpa_Resource
 	 * Perform a delete request
 	 *
 	 * @param string $path
-	 * @param array $header
 	 * @param array $param
+	 * @param array $header
+	 * 
 	 * @return Sophpa_Response 
 	 */
 	public function delete($path, array $param = array(), array $header = array())
@@ -40,8 +44,9 @@ class Sophpa_Resource
 	 * Perform a get request
 	 *
 	 * @param string $path
-	 * @param array $header
 	 * @param array $param
+	 * @param array $header
+	 * 
 	 * @return Sophpa_Response
 	 */
 	public function get($path, array $param = array(), array $header = array())
@@ -53,8 +58,9 @@ class Sophpa_Resource
 	 * Perform a head request
 	 *
 	 * @param string $path
-	 * @param array $header
 	 * @param array $param
+	 * @param array $header
+	 * 
 	 * @return Sophpa_Response
 	 */
 	public function head($path, array $param = array(), array $header = array())
@@ -67,8 +73,9 @@ class Sophpa_Resource
 	 *
 	 * @param string $path
 	 * @param string $content
-	 * @param array $header
 	 * @param array $param
+	 * @param array $header
+	 * 
 	 * @return Sophpa_Response
 	 */
 	public function post($path, $content, array $param = array(), array $header = array())
@@ -81,8 +88,9 @@ class Sophpa_Resource
 	 *
 	 * @param string $path
 	 * @param string $content
-	 * @param array $header
 	 * @param array $param
+	 * @param array $header
+	 * 
 	 * @return Sophpa_Response
 	 */
 	public function put($path, $content = null, array $param = array(), array $header = array())
@@ -91,16 +99,10 @@ class Sophpa_Resource
 	}
 
 	protected function request($method, $path, $content, $header, $param)
-	{
-		require_once 'Sophpa/Util.php';
-		
-		$url = Sophpa_Util::uri($this->uri, $path, $param);
+	{		
+		$url = $this->assembleUrl($this->uri, $path, $param);
 
-		if(!is_string($content)) {
-			$body = json_encode($content);
-		} else {
-			$body = $content;
-		}
+		$body = is_string($content) ? $content : json_encode($content);
 
 		$response = $this->http->request($method, $url, $body, $header);
 	
@@ -124,6 +126,32 @@ class Sophpa_Resource
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Assembles a url from 3 given parts
+	 * 
+	 * @param string $base
+	 * @param array|string $path
+	 * @param array $query
+	 * 
+	 * @return string URL
+	 */
+	protected function assembleUrl($base, $paths = null, array $query = array())
+	{
+		$uri = rtrim($base, '/');
+
+		$paths = (array)$paths;
+		foreach($paths as &$path) {
+			$path = trim($path, '/');
+		}
+		$uri .= '/' . implode($paths, '/');
+		
+		if($query) {
+			$uri .= '?' . http_build_query($query);
+		}
+		
+		return $uri;
 	}
 }
 

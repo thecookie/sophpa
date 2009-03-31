@@ -1,21 +1,24 @@
 Sophpa
 ======
-Sophpa is a leightweight [Apache CouchDB](http://couchdb.apache.org/ "Visit the Apache CouchDB homepage")
+Sophpa is a lightweight [Apache CouchDB](http://couchdb.apache.org/ "Visit the Apache CouchDB homepage")
 interface for PHP5.
 
 >Apache CouchDB is a distributed, fault-tolerant and schema-free document-oriented database accessible via a RESTful HTTP/JSON API. 
 
-The development has been inspired by couchdb-python, Phly_Couch and jcouchdb.
-Sophpa is currently in a pretty early state, put on github for feedback and/or
-contribution. Stuff planned can be found in TODO.txt. I'm sure the API will change a lot.
+Sophpa has been designed to use only native PHP arrays as data structures. This makes Sophpa very lightweight
+and well fitting as a base to Object-mapping frameworks. Stuff planned can be found in TODO.txt.
 
 Requirements
 ------------
-PHP: 5.2.8, there seems to be a strange bug with ArrayObject in 5.2.6 at least
+PHP: 5.2.8, only version that has been tested
 
 PEAR: PHPUnit 3.3.*
 
 Extensions: ext/curl, there will be other http adapters in the future though
+
+Running tests
+------------
+Sophpa's tests are based on PHPUnit. Just execute the `phpunit` command in the root directory of Sophpa to run them.
 
 Usage
 -----
@@ -25,7 +28,7 @@ Usage
 	require_once 'Sophpa/Server.php';
 	
 	$http = new Sophpa_Http_Curl();
-	$resource = new Sophpa_Resource($http, 'http://localhost:5984');
+	$resource = new Sophpa_Resource($http, 'http://eee:5984');
 	
 	$server = new Sophpa_Server($resource);
 	
@@ -57,7 +60,10 @@ Usage
 	);
 	
 	for($i=0;$i<10;$i++) {
-		$db->create(array('content' => 'random article content', 'tag' => $tags[rand(0,3)]));
+		$db->save(array(
+			'content' => 'random article content',
+			'tag' => $tags[rand(0,3)]
+		));
 	}
 	
 	echo count($db);
@@ -70,25 +76,39 @@ Usage
 
 	$view = $db->query($map, $reduce, array('group' => 'true'));
 	
-	foreach($view as $row) {
-		print_r($row);
-	}
-	
+	print_r($view);
+
 	/*
-	Sophpa_Row Object
+	Array
 	(
-	    [key] => Java
-	    [value] => 2
-	)
-	Sophpa_Row Object
-	(
-	    [key] => PHP
-	    [value] => 5
-	)
-	Sophpa_Row Object
-	(
-	    [key] => Python
-	    [value] => 3
+	    [rows] => Array
+		(
+		    [0] => Array
+		        (
+		            [key] => Java
+		            [value] => 2
+		        )
+
+		    [1] => Array
+		        (
+		            [key] => PHP
+		            [value] => 2
+		        )
+
+		    [2] => Array
+		        (
+		            [key] => Python
+		            [value] => 2
+		        )
+
+		    [3] => Array
+		        (
+		            [key] => Ruby
+		            [value] => 4
+		        )
+
+		)
+
 	)
 	*/
 	

@@ -31,8 +31,13 @@ class Sophpa_Database implements Countable
 	);
 
 	/**
-	 * Holds the injected resource
+	 * Holds the injected server
 	 *
+	 * @var Sophpa_Server
+	 */
+	protected $server;
+
+	/**
 	 * @var Sophpa_Resource
 	 */
 	protected $resource;
@@ -47,12 +52,13 @@ class Sophpa_Database implements Countable
 	/**
 	 * Constructor
 	 *
-	 * @param Sophpa_Resource $resource
+	 * @param Sophpa_Server $server
 	 * @param string $name
 	 */
-	public function __construct(Sophpa_Resource $resource, $name = null)
+	public function __construct(Sophpa_Server $server, $name)
 	{
-		$this->resource = $resource;
+		$this->server = $server;
+		$this->resource = $server->getResource();
 		$this->name = $name;
 	}
 
@@ -63,19 +69,17 @@ class Sophpa_Database implements Countable
 	 */
 	public function getName()
 	{
-		if($this->name === null) {
-			$info = $this->getInfo();
-			$this->name = $info['db_name'];
-		}
-
 		return $this->name;
 	}
 
+	/**
+	 * Get info about the database
+	 *
+	 * @return array
+	 */
 	public function getInfo()
 	{
-		$response = $this->resource->get('/');
-		
-		return $response->getContent();
+		return $this->resource->get($this->name)->getContent();
 	}
 	
 	/**
@@ -85,13 +89,13 @@ class Sophpa_Database implements Countable
 	 */
 	public function count()
 	{
-		$content = $this->resource->get('/')->getContent();
+		$content = $this->resource->get($this->name)->getContent();
 		
 		return $content['doc_count'];
 	}
 
 	/**
-	 * Get a document based on its id
+	 * Get a document based on its _id
 	 *
 	 * @param string $id
 	 * @param array $options
@@ -99,16 +103,15 @@ class Sophpa_Database implements Countable
 	 */
 	public function get($id, array $options = array())
 	{
-		$response = $this->resource->get($id, $options);
-		
-		return $response->getContent();
+		return $this->resource->get(array($this->name, $id), $options)->getContent();
 	}
 
 	/**
-	 * Query the _all_docs view to get all documents in the database
+	 * Query the _all_docs view to get all documents in the database.
+	 * All options available to regular views can be used.
 	 *
 	 * @param array $options
-	 * @return Sophpa_ViewResult
+	 * @return array
 	 */
 	public function getAll(array $options = array())
 	{
@@ -116,59 +119,41 @@ class Sophpa_Database implements Countable
 	}
 
 	/**
-	 * Update or create a document. The data must contain an _id field. When used
-	 * to update, a _rev field must be present.
+	 * Update or create a document. If no _id field is set, an _id will be generated
+	 * by CouchDB. When used to update, a _rev field must be present.
 	 *
 	 * @param array $data
 	 * @return array
 	 */
-	public function save($data)
+	public function save(array $data)
 	{
 		if(!isset($data['_id'])) {
-			throw new Sophpa_Exception('At least the _id key has to be set when using save');
+			$uuids = $this->server->getUuids();
+			$data['_id'] = $uuids[0];
 		}
 		
-		$response = $this->resource->put($data['_id'], $data);
-
-		return $response->getContent();
+		return $this->resource->put(array($this->name, $data['_id']), $data)->getContent();
 	}
 
 	/**
 	 * Update and/or create a set of documents
 	 *
-	 * @param array $documents
+	 * @param array $docs
 	 */
-	public function bulkSave(array $documents)
+	public function bulkSave(array $docs)
 	{
 
-	}
-
-	/**
-	 * Create a new document with a server generated ID
-	 *
-	 * @param array|string $data
-	 * @return array
-	 */ 
-	public function create($data)
-	{
-		// Workaround due to array('value','value') getting encoded to ["value","value"]
-		// rather than {"0":"value","1":"value"}
-		if(is_array($data)) {
-			$data = new ArrayObject($data);
-		}
-
-		return $this->resource->post('/', $data)->getContent();
 	}
 
 	/**
 	 * Delete a document 
 	 *
 	 * @param array $doc
-	 * @return void
+	 * @return array
 	 */
 	public function delete(array $doc)
 	{
-		$this->resource->delete($doc['_id'], array('rev' => $doc['_rev']));
+		return $this->resource->delete($doc['_id'], array('rev' => $doc['_rev']));
 	}
 
 	/**
@@ -223,7 +208,7 @@ class Sophpa_Database implements Countable
 		}
 
 		$response = $this->resource->post(
-			'_temp_view',
+			array($this->name, '_temp_view'),
 			$body,
 			$this->encodeOptions($options),
 			array('Content-Type' => 'application/json')
@@ -250,7 +235,7 @@ class Sophpa_Database implements Countable
 	}
 
 	/**
-	 * String representation of database.
+	 * The string representation of the database object is the database name
 	 *
 	 * @return string
 	 */
