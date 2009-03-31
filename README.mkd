@@ -28,7 +28,7 @@ Usage
 	require_once 'Sophpa/Server.php';
 	
 	$http = new Sophpa_Http_Curl();
-	$resource = new Sophpa_Resource($http, 'http://eee:5984');
+	$resource = new Sophpa_Resource($http, 'http://localhost:5984');
 	
 	$server = new Sophpa_Server($resource);
 	

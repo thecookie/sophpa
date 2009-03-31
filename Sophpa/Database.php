@@ -218,6 +218,19 @@ class Sophpa_Database implements Countable
 	}
 
 	/**
+	 * Initialize a database compaction. This removes outdated and deleted document
+	 * revisions.
+	 *
+	 * @return bool
+	 */
+	public function compact()
+	{
+		$content = $this->resource->post(array($this->name, '_compact'))->getContent();
+		
+		return (bool)$content['ok'];
+	}
+
+	/**
 	 * CouchDB wants some query string options json encoded
 	 *
 	 * @param array $options

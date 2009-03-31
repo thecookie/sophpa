@@ -98,4 +98,16 @@ class Sophpa_Server
 
 		return $content['uuids'];
 	}
+
+	/**
+	 * Restart the CouchDB instance
+	 *
+	 * @return bool
+	 */
+	public function restart()
+	{
+		$content = $this->resource->post('_restart')->getContent();
+		
+		return (bool)$content['ok'];
+	}
 }

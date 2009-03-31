@@ -115,4 +115,16 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals('67a1b79689f7af242fbb7e5bec97a722', $uuids[0]);
 	}
+
+	public function testInitializesRestart()
+	{
+		$response = new Sophpa_Response(200, $this->responseHeader, '{"ok":true}');
+		$this->mockResource->expects($this->once())
+						   ->method('post')
+						   ->with($this->equalTo('_restart'))
+						   ->will($this->returnValue($response));
+		$server = new Sophpa_Server($this->mockResource);
+
+		$this->assertTrue($server->restart());
+	}
 }

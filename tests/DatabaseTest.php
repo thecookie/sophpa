@@ -126,5 +126,17 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals('random_name', (string)$db);
 	}
+
+	public function testInitializesCompaction()
+	{
+		$response = new Sophpa_Response(202, $this->responseHeader, '{"ok":true}');
+		$this->mockResource->expects($this->once())
+						   ->method('post')
+						   ->with($this->equalTo(array('random_name', '_compact')))
+						   ->will($this->returnValue($response));
+		$db = new Sophpa_Database($this->mockServer, 'random_name');
+		
+		$this->assertTrue($db->compact());
+	}
 }
 

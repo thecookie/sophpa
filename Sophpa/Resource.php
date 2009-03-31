@@ -29,7 +29,7 @@ class Sophpa_Resource
 	/**
 	 * Perform a delete request
 	 *
-	 * @param string $path
+	 * @param string|array $path
 	 * @param array $param
 	 * @param array $header
 	 * 
@@ -43,7 +43,7 @@ class Sophpa_Resource
 	/**
 	 * Perform a get request
 	 *
-	 * @param string $path
+	 * @param string|array $path
 	 * @param array $param
 	 * @param array $header
 	 * 
@@ -57,7 +57,7 @@ class Sophpa_Resource
 	/**
 	 * Perform a head request
 	 *
-	 * @param string $path
+	 * @param string|array $path
 	 * @param array $param
 	 * @param array $header
 	 * 
@@ -71,14 +71,14 @@ class Sophpa_Resource
 	/**
 	 * Perform a post request
 	 *
-	 * @param string $path
+	 * @param string|array $path
 	 * @param string $content
 	 * @param array $param
 	 * @param array $header
 	 * 
 	 * @return Sophpa_Response
 	 */
-	public function post($path, $content, array $param = array(), array $header = array())
+	public function post($path, $content = null, array $param = array(), array $header = array())
 	{
 		return $this->request('POST', $path, $content, $header, $param);
 	}
@@ -86,7 +86,7 @@ class Sophpa_Resource
 	/**
 	 * Perform a put request
 	 *
-	 * @param string $path
+	 * @param string|array $path
 	 * @param string $content
 	 * @param array $param
 	 * @param array $header
@@ -132,7 +132,7 @@ class Sophpa_Resource
 	 * Assembles a url from 3 given parts
 	 * 
 	 * @param string $base
-	 * @param array|string $path
+	 * @param string|array $path
 	 * @param array $query
 	 * 
 	 * @return string URL
