@@ -173,17 +173,17 @@ class Sophpa_Database implements Countable
 		}
 
 		if(!count($options)) {
-			return $this->resource->get($name)->getContent();
+			return $this->resource->get(array($this->name, $name))->getContent();
 		}
 
 		if(!array_key_exists(self::VIEW_OPTION_KEYS, $options)) {
-			return $this->resource->get($name, $this->encodeOptions($options))->getContent();
+			return $this->resource->get(array($this->name, $name), $this->encodeOptions($options))->getContent();
 		}
 			
 		$keys[self::VIEW_OPTION_KEYS] = $options[self::VIEW_OPTION_KEYS];
 		unset($options[self::VIEW_OPTION_KEYS]);
 
-		return $this->resource->post($name, $keys, $this->encodeOptions($options))->getContent();
+		return $this->resource->post(array($this->name, $name), $keys, $this->encodeOptions($options))->getContent();
 	}
 
 	/**

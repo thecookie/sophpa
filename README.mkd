@@ -16,7 +16,7 @@ PEAR: PHPUnit 3.3.*
 
 Extensions: ext/curl, there will be other http adapters in the future though
 
-Running tests
+Running unit tests
 ------------
 Sophpa's tests are based on PHPUnit. Just execute the `phpunit` command in the root directory of Sophpa to run them.
 

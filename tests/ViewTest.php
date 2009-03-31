@@ -68,7 +68,10 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 
 	public function testQueriesPermanentViewWithoutOptions()
 	{
-		$this->mockResource->expects($this->once())->method('get')->will($this->returnValue($this->mockResponse));
+		$this->mockResource->expects($this->once())
+						   ->method('get')
+						   ->with(array('name', '_design/design/_view/view'))
+						   ->will($this->returnValue($this->mockResponse));
 
 		$db = new Sophpa_Database($this->mockServer, 'name');
 		$db->view('design/view');
@@ -80,7 +83,7 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 
 		$this->mockResource->expects($this->once())
 					  ->method('get')
-					  ->with($this->anything(), $this->equalTo($options))
+					  ->with(array('name', '_design/design/_view/view'), $this->equalTo($options))
 					  ->will($this->returnValue($this->mockResponse));
 		
 		$db = new Sophpa_Database($this->mockServer, 'name');
@@ -96,7 +99,7 @@ class Sophpa_ViewTest extends PHPUnit_Framework_TestCase
 		);
 		$this->mockResource->expects($this->once())
 					  ->method('post')
-					  ->with($this->anything(), $this->arrayHasKey('keys'), $this->contains(50))
+					  ->with(array('name', '_design/design/_view/view'), $this->arrayHasKey('keys'), $this->contains(50))
 					  ->will($this->returnValue($this->mockResponse));
 
 		$db = new Sophpa_Database($this->mockServer, 'name');

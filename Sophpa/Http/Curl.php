@@ -6,7 +6,6 @@ class Sophpa_Http_Curl implements Sophpa_Http
 {
 	public function __construct()
 	{
-		// @todo verify that curl is installed?
 	}
 
 	public function request($method, $url, $content, $header)
