@@ -11,6 +11,18 @@ class Sophpa_Server
 	 */
 	protected $resource;
 
+	/**
+	 * Cache of server generated uuids
+	 *
+	 * @var array
+	 */
+	protected $uuidCache = array();
+
+	/**
+	 * Constructor
+	 *
+	 * @param Sophpa_Resource $resource
+	 */
 	public function __construct(Sophpa_Resource $resource)
 	{
 		$this->resource = $resource;
@@ -92,11 +104,14 @@ class Sophpa_Server
 	 * @param int $count
 	 * @return array
 	 */
-	public function getUuids($count = 1)
+	public function getUuid($count = 1)
 	{
-		$content = $this->resource->get('_uuids', array('count' => $count))->getContent();
+		if(count($this->uuidCache) < $count) {
+			$content = $this->resource->get('_uuids', array('count' => 10 + $count))->getContent();
+			$this->uuidCache += $content['uuids'];
+		}
 
-		return $content['uuids'];
+		return array_splice($this->uuidCache, 0, $count);
 	}
 
 	/**

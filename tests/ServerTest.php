@@ -2,11 +2,13 @@
 
 require_once 'PHPUnit/Framework.php';
 require_once 'Sophpa/Server.php';
+require_once 'Sophpa/Resource.php';
 require_once 'Sophpa/Response.php';
 
 class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 {
 	protected $mockResource;
+	protected $mockResponse;
 	
 	protected $responseHeader = array();
 
@@ -18,6 +20,14 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 			'Sophpa_Resource',
 			array('delete', 'get', 'head','post', 'put', '__toString'),
 			array($http, 'http://localhost:5984')
+		);
+
+		$this->mockResponse = $this->getMock(
+			'Sophpa_Response',
+			array('getContent'),
+			array(),
+			'',
+			false
 		);
 	}
 
@@ -103,19 +113,6 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('0.9.0a749067', $server->getVersion());
 	}
 
-	public function testGetsUuids()
-	{
-		$response = new Sophpa_Response(200, $this->responseHeader, '{"uuids":["67a1b79689f7af242fbb7e5bec97a722"]}');
-		$this->mockResource->expects($this->once())
-							 ->method('get')
-							 ->with($this->equalTo('_uuids'), $this->equalTo(array('count' => 1)))
-							 ->will($this->returnValue($response));
-		$server = new Sophpa_Server($this->mockResource);
-		$uuids = $server->getUuids();
-
-		$this->assertEquals('67a1b79689f7af242fbb7e5bec97a722', $uuids[0]);
-	}
-
 	public function testInitializesRestart()
 	{
 		$response = new Sophpa_Response(200, $this->responseHeader, '{"ok":true}');
@@ -126,5 +123,49 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 		$server = new Sophpa_Server($this->mockResource);
 
 		$this->assertTrue($server->restart());
+	}
+
+	public function testAquiresCorrectNumberOfUuidsWhenEmptyCache()
+	{
+		$response = array('uuids' => array(
+			'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
+		));
+		
+		$this->mockResponse->expects($this->once())
+						   ->method('getContent')
+						   ->will($this->returnValue($response));
+
+		$this->mockResource->expects($this->once())
+						   ->method('get')
+						   ->with('_uuids')
+						   ->will($this->returnValue($this->mockResponse));
+
+		$server = new Sophpa_Server($this->mockResource);
+		$uuids = $server->getUuid(2);
+
+		$this->assertEquals(array('1', '2'), $uuids);
+	}
+
+	public function testAquiresCorrectNumberOfCachedUuids()
+	{
+		$response = array('uuids' => array(
+			'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
+		));
+		
+		$this->mockResponse->expects($this->once())
+						   ->method('getContent')
+						   ->will($this->returnValue($response));
+
+		$this->mockResource->expects($this->once())
+						   ->method('get')
+						   ->with('_uuids')
+						   ->will($this->returnValue($this->mockResponse));
+
+		$server = new Sophpa_Server($this->mockResource);
+		$uuids = $server->getUuid(2);
+		$uuids2 = $server->getUuid(10);
+
+		$this->assertEquals(array('1', '2'), $uuids);
+		$this->assertEquals(array('3', '4', '5', '6', '7', '8', '9', '10', '11', '12'), $uuids2);
 	}
 }

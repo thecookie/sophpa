@@ -14,6 +14,11 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 
 	protected $mockResource;
 
+	/**
+	 * @var Sophpa_Response
+	 */
+	protected $mockResponse;
+
 	protected function setUp()
 	{
 		$this->mockResource = $this->getMock(
@@ -26,7 +31,7 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 
 		$this->mockServer = $this->getMock(
 			'Sophpa_Server',
-			array('getResource', 'getUuids'),
+			array('getResource', 'getUuid'),
 			array(),
 			'',
 			false
@@ -34,6 +39,14 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 		$this->mockServer->expects($this->once())
 						 ->method('getResource')
 						 ->will($this->returnValue($this->mockResource));
+		
+		$this->mockResponse = $this->getMock(
+			'Sophpa_Response',
+			array('getContent'),
+			array(),
+			'',
+			false
+		);
 	}
 
 	public function testShouldGetDbName()
@@ -83,9 +96,9 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 		$response = new Sophpa_Response(201, $this->responseHeader, $json);
 		$this->mockResource->expects($this->once())
 							->method('put')
-							->with($this->equalTo(array('test_database', 'random_uuid')))
+							->with(array('test_database', 'random_uuid'))
 							->will($this->returnValue($response));
-		$this->mockServer->expects($this->once())->method('getUuids')->will($this->returnValue(array('random_uuid')));
+		$this->mockServer->expects($this->once())->method('getUuid')->will($this->returnValue(array('random_uuid')));
 
 		$db = new Sophpa_Database($this->mockServer, 'test_database');
 		$result = $db->save(array('test', 'test', 'test'));
@@ -93,11 +106,14 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('random_uuid', $result['id']);
 	}
 
-	public function testSavesDocumentWithId()
+	public function testSavesNewDocument()
 	{
 		$json = '{"ok":true, "id":"123BAC", "rev":"946B7D1C"}';
 		$response = new Sophpa_Response(201, $this->responseHeader, $json);
-		$this->mockResource->expects($this->once())->method('put')->will($this->returnValue($response));
+		$this->mockResource->expects($this->once())
+						   ->method('put')
+						   ->with(array('test_database', 'id'))
+						   ->will($this->returnValue($response));
 
 		$db = new Sophpa_Database($this->mockServer, 'test_database');
 		$doc = array(
@@ -113,11 +129,13 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 
 	public function testShouldDeleteDocumentById()
 	{
-		$response = new Sophpa_Response(200, $this->responseHeader, '{"ok":true,"rev":"2839830636"}');
-		$this->mockResource->expects($this->once())->method('delete')->will($this->returnValue($response));
+		$this->mockResource->expects($this->once())
+						   ->method('delete')
+						   ->with(array('test_database', '123BAC'))
+						   ->will($this->returnValue($this->mockResponse));
 
 		$db = new Sophpa_Database($this->mockServer, 'test_database');
-		$result = $db->delete(array('_id' => '123BAC', '_rev' => '946B7D1C'));
+		$db->delete(array('_id' => '123BAC', '_rev' => '946B7D1C'));
 	}
 
 	public function testShouldGetDbNameFromToString()
@@ -132,11 +150,132 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 		$response = new Sophpa_Response(202, $this->responseHeader, '{"ok":true}');
 		$this->mockResource->expects($this->once())
 						   ->method('post')
-						   ->with($this->equalTo(array('random_name', '_compact')))
+						   ->with(array('random_name', '_compact'))
 						   ->will($this->returnValue($response));
 		$db = new Sophpa_Database($this->mockServer, 'random_name');
 		
 		$this->assertTrue($db->compact());
+	}
+
+	public function testBulkSavesNewDocumnets()
+	{
+		$docs = array(
+			array('banana'),
+			array('apple'),
+			array('pear')
+		);
+		
+		$expectedBody = array(
+			'docs' => array(
+				array(
+					'banana',
+					'_id' => 'uuid3'
+				),
+				array(
+					'apple',
+					'_id' => 'uuid2'
+				),
+				array(
+					'pear',
+					'_id' => 'uuid1'
+				)
+			)
+		);
+
+		$this->mockResource->expects($this->once())
+						   ->method('post')
+						   ->with(array('db_name', '_bulk_docs'), $expectedBody)
+						   ->will($this->returnValue($this->mockResponse));
+
+		$this->mockServer->expects($this->once())
+						 ->method('getUuid')
+						 ->with(3)
+						 ->will($this->returnValue(array('uuid1', 'uuid2', 'uuid3')));
+
+		$db = new Sophpa_Database($this->mockServer, 'db_name');
+		$db->bulkSave($docs);
+	}
+
+	public function testBulkSavesDocuments()
+	{
+		$docs = array(
+			array(
+				'banana',
+				'_id' => 'uuid3'
+			),
+			array(
+				'apple',
+				'_id' => 'uuid2'
+			),
+			array(
+				'pear',
+				'_id' => 'uuid1'
+			)
+		);
+
+		$this->mockResource->expects($this->once())
+						   ->method('post')
+						   ->with(array('db_name', '_bulk_docs'), array('docs' => $docs))
+						   ->will($this->returnValue($this->mockResponse));
+
+		$this->mockServer->expects($this->once())
+						 ->method('getUuid')
+						 ->with(0)
+						 ->will($this->returnValue(array()));
+
+		$db = new Sophpa_Database($this->mockServer, 'db_name');
+		$db->bulkSave($docs);
+	}
+
+	public function testBulkSavesDocumentsWithOption()
+	{
+		$docs = array(array('_id' => 'id', 'document!'));
+		
+		$expectedBody = array(
+			'docs' => $docs,
+			Sophpa_Database::BULK_OPTION_ALL_OR_NOTHING => true
+		);
+
+		$this->mockResource->expects($this->once())
+						   ->method('post')
+						   ->with(array('db_name', '_bulk_docs'), $expectedBody)
+						   ->will($this->returnValue($this->mockResponse));
+
+		$this->mockServer->expects($this->once())
+						 ->method('getUuid')
+						 ->with(0)
+						 ->will($this->returnValue(array()));
+
+		$db = new Sophpa_Database($this->mockServer, 'db_name');
+		$db->bulkSave($docs, array(Sophpa_Database::BULK_OPTION_ALL_OR_NOTHING => true));
+	}
+
+	public function testBulkDeleteDocuments()
+	{
+		$docs = array(
+			array('_id' => 'id1', '_rev' => 'rev1'),
+			array('_id' => 'id2', '_rev' => 'rev2')
+		);
+		
+		$expectedBody = array(
+			'docs' => array(
+				array('_id' => 'id1', '_rev' => 'rev1', '_deleted' => true),
+				array('_id' => 'id2', '_rev' => 'rev2', '_deleted' => true)
+			)
+		);
+
+		$this->mockResource->expects($this->once())
+						   ->method('post')
+						   ->with(array('db_name', '_bulk_docs'), $expectedBody)
+						   ->will($this->returnValue($this->mockResponse));
+
+		$this->mockServer->expects($this->once())
+						 ->method('getUuid')
+						 ->with(0)
+						 ->will($this->returnValue(array()));
+
+		$db = new Sophpa_Database($this->mockServer, 'db_name');
+		$db->bulkDelete($docs);
 	}
 }
 

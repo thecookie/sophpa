@@ -7,12 +7,12 @@ class Sophpa_Resource
 	 *
 	 * @var Sophpa_Http
 	 */
-	public $http;
+	protected $http;
 
 	/**
 	 * @var string
 	 */
-	public $uri;
+	protected $uri;
 
 	/**
 	 * Constructor

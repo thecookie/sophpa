@@ -19,6 +19,8 @@ class Sophpa_Database implements Countable
 	const VIEW_OPTION_STARTKEY = 'startkey';
 	const VIEW_OPTION_STARTKEY_DOCID = 'startkey_docid';
 
+	const BULK_OPTION_ALL_OR_NOTHING = 'all_or_nothing';
+
 	/**
 	 * Contains options to be JSON encoded, used in encodeOptions()
 	 *
@@ -60,6 +62,16 @@ class Sophpa_Database implements Countable
 		$this->server = $server;
 		$this->resource = $server->getResource();
 		$this->name = $name;
+	}
+
+	/**
+	 * Get the injected server instance
+	 *
+	 * @return Sophpa_Server
+	 */
+	public function getServer()
+	{
+		return $this->server;
 	}
 
 	/**
@@ -128,7 +140,7 @@ class Sophpa_Database implements Countable
 	public function save(array $data)
 	{
 		if(!isset($data['_id'])) {
-			$uuids = $this->server->getUuids();
+			$uuids = $this->server->getUuid(1);
 			$data['_id'] = $uuids[0];
 		}
 		
@@ -136,13 +148,54 @@ class Sophpa_Database implements Countable
 	}
 
 	/**
-	 * Update and/or create a set of documents
+	 * Save an array of documents.
 	 *
+	 * @todo handle 417 with all_or_nothing
 	 * @param array $docs
+	 * @param array $options
+	 * @return array
 	 */
-	public function bulkSave(array $docs)
+	public function bulkSave(array $docs, array $options = array())
 	{
+		$newDocs = array();
 
+		foreach($docs as &$doc) {
+			$doc = (array)$doc;
+			if(!isset($doc['_id'])) {
+				$newDocs[] = &$doc;
+			}	
+		}
+
+		$uuids = $this->server->getUuid(count($newDocs));
+
+		foreach($newDocs as &$doc) {
+			$doc['_id'] = array_pop($uuids);
+		}
+
+		$content = $this->resource->post(
+			array($this->name, '_bulk_docs'),
+			array('docs' => $docs) + $options
+		)->getContent();
+
+		return $content;
+	}
+
+	/**
+	 * Delete an array of documents. This is a "shortcut", instead manually adding
+	 * _deleted = true on each doc with bulkSave.
+	 *
+	 * @todo remove docs without _id?
+	 * @param array $docs
+	 * @param array $options
+	 * @return array
+	 */
+	public function bulkDelete(array $docs, array $options = array())
+	{
+		foreach($docs as &$doc) {
+			$doc['_deleted'] = true;
+		}
+
+		return $this->bulkSave($docs, $options);
 	}
 
 	/**
@@ -153,7 +206,9 @@ class Sophpa_Database implements Countable
 	 */
 	public function delete(array $doc)
 	{
-		return $this->resource->delete($doc['_id'], array('rev' => $doc['_rev']));
+		$response = $this->resource->delete(array($this->name, $doc['_id']), array('rev' => $doc['_rev']));
+ 
+		return $response->getContent();
 	}
 
 	/**
