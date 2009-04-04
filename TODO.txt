@@ -1,14 +1,8 @@
 Todo
-  Bulk save
   Attachements
   HTTP auth
-  UUID cache
 
-  Make URI handling prettier. Have an url object?
-  Handle docs from map-only viwes with include_docs=true
-  Revisions of documents
   Smoother way of handling options?
   Integration tests
-  Cache support in http adapter?
   Multi request curl adapter?
   Use Mockery?

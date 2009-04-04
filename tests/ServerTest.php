@@ -2,66 +2,41 @@
 
 require_once 'PHPUnit/Framework.php';
 require_once 'Sophpa/Server.php';
-require_once 'Sophpa/Resource.php';
-require_once 'Sophpa/Response.php';
 
 class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 {
 	protected $mockResource;
 	protected $mockResponse;
-	
-	protected $responseHeader = array();
 
 	protected function setUp()
 	{
-		$http = $this->getMock('Sophpa_Http');
-
-		$this->mockResource = $this->getMock(
-			'Sophpa_Resource',
-			array('delete', 'get', 'head','post', 'put', '__toString'),
-			array($http, 'http://localhost:5984')
-		);
-
-		$this->mockResponse = $this->getMock(
-			'Sophpa_Response',
-			array('getContent'),
-			array(),
-			'',
-			false
-		);
+		$this->mockResource = $this->getMock('Sophpa_Resource', array(), array(), '', false);
+		$this->mockResponse = $this->getMock('Sophpa_Response', array(), array(), '', false);
 	}
 
 	public function testGetsListOfDatabases()
 	{
-		$response = new Sophpa_Response(200, $this->responseHeader, '["testdatabase","somedatabase"]');
-
-		$this->mockResource->expects($this->once())
-						   ->method('get')
-						   ->with($this->equalTo('_all_dbs'))
-						   ->will($this->returnValue($response));
+		$databases = array('testdatabase', 'somedatabase');
+		$this->setUpResourceAndResponse('get', '_all_dbs', $databases);
 
 		$server = new Sophpa_Server($this->mockResource);
 		
-		$this->assertContains('testdatabase', $server->listDatabases());
+		$this->assertEquals($databases, $server->listDatabases());
 	}
 
 	public function testCreatesDatabase()
 	{
-		$response = new Sophpa_Response(201, $this->responseHeader, '{"ok":true}');
-
-		$this->mockResource->expects($this->once())
-						   ->method('put')
-						   ->with($this->equalTo('testdatabase'))
-						   ->will($this->returnValue($response));
+		$this->setUpResourceAndResponse('put', 'db_name');
 		
 		$server = new Sophpa_Server($this->mockResource);
-		$db = $server->createDatabase('testdatabase');
+		$db = $server->createDatabase('db_name');
 
 		$this->assertTrue($db instanceof Sophpa_Database);
-		$this->assertEquals('testdatabase', $db->getName());
+		$this->assertEquals('db_name', $db->getName());
 	}
 
 	/**
+	 * @todo move to resource test
 	 * @expectedException Sophpa_Resource_ConflictException
 	 */
 	public function testThrowsExceptionIfDatabaseExists()
@@ -77,37 +52,30 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 		$server->createDatabase('db_name_that_already_exist');
 	}
 
-	public function testShouldReturnDatabase()
+	public function testCreatesCorrectDatabaseInstance()
 	{
 		$server = new Sophpa_Server($this->mockResource);
 		
-		$db = $server->getDatabase('database_name');
+		$db = $server->getDatabase('db_name');
 		
 		$this->assertTrue($db instanceof Sophpa_Database);
-		$this->assertEquals('database_name', $db->getName());
+		$this->assertEquals('db_name', $db->getName());
 	}
 
 	public function testShouldDeleteDatabase()
 	{
-		$response = new Sophpa_Response(200, $this->responseHeader, '{"ok": true}');
+		$this->setUpResourceAndResponse('delete', 'db_name');
 
-		$this->mockResource->expects($this->once())
-							->method('delete')
-							->with($this->equalTo('db_name_that_exists'))
-							->will($this->returnValue($response));
 		$server = new Sophpa_Server($this->mockResource);
 		
-		$server->deleteDatabase('db_name_that_exists');
+		$server->deleteDatabase('db_name');
 	}
 
 	public function testShouldGetVersion()
 	{
-		$response = new Sophpa_Response(200, $this->responseHeader, '{"couchdb":"Welcome","version":"0.9.0a749067"}');
+		$response = json_decode('{"couchdb":"Welcome","version":"0.9.0a749067"}', true);
+		$this->setUpResourceAndResponse('get', '/', $response);
 
-		$this->mockResource->expects($this->once())
-							 ->method('get')
-							 ->with($this->equalTo('/'))
-							 ->will($this->returnValue($response));
 		$server = new Sophpa_Server($this->mockResource);
 		
 		$this->assertEquals('0.9.0a749067', $server->getVersion());
@@ -115,11 +83,8 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 
 	public function testInitializesRestart()
 	{
-		$response = new Sophpa_Response(200, $this->responseHeader, '{"ok":true}');
-		$this->mockResource->expects($this->once())
-						   ->method('post')
-						   ->with($this->equalTo('_restart'))
-						   ->will($this->returnValue($response));
+		$this->setUpResourceAndResponse('post', '_restart', array('ok' => true));
+
 		$server = new Sophpa_Server($this->mockResource);
 
 		$this->assertTrue($server->restart());
@@ -130,15 +95,8 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 		$response = array('uuids' => array(
 			'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
 		));
-		
-		$this->mockResponse->expects($this->once())
-						   ->method('getContent')
-						   ->will($this->returnValue($response));
 
-		$this->mockResource->expects($this->once())
-						   ->method('get')
-						   ->with('_uuids')
-						   ->will($this->returnValue($this->mockResponse));
+		$this->setUpResourceAndResponse('get', '_uuids', $response, array('count' => 12));
 
 		$server = new Sophpa_Server($this->mockResource);
 		$uuids = $server->getUuid(2);
@@ -151,15 +109,8 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 		$response = array('uuids' => array(
 			'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
 		));
-		
-		$this->mockResponse->expects($this->once())
-						   ->method('getContent')
-						   ->will($this->returnValue($response));
 
-		$this->mockResource->expects($this->once())
-						   ->method('get')
-						   ->with('_uuids')
-						   ->will($this->returnValue($this->mockResponse));
+		$this->setUpResourceAndResponse('get', '_uuids', $response, array('count' => 12));
 
 		$server = new Sophpa_Server($this->mockResource);
 		$uuids = $server->getUuid(2);
@@ -167,5 +118,34 @@ class Sophpa_ServerTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals(array('1', '2'), $uuids);
 		$this->assertEquals(array('3', '4', '5', '6', '7', '8', '9', '10', '11', '12'), $uuids2);
+	}
+
+	public function testSetsUuidCacheOption()
+	{
+		$this->setUpResourceAndResponse('get', '_uuids', array('uuids' => array()), array('count' => 110));
+
+		$server = new Sophpa_Server($this->mockResource, 100);
+		$server->getUuid(10);
+	}
+
+	protected function setUpResourceAndResponse($resourceMethod, $requestPath, $response = null, $requestParams = null)
+	{
+		if($response) {
+			$this->mockResponse->expects($this->once())
+							   ->method('getContent')
+							   ->will($this->returnValue($response));
+		}
+
+		if($requestParams) {
+			$this->mockResource->expects($this->once())
+							   ->method($resourceMethod)
+							   ->with($this->equalTo($requestPath), $this->equalTo($requestParams))
+							   ->will($this->returnValue($this->mockResponse));
+		} else {
+			$this->mockResource->expects($this->once())
+							   ->method($resourceMethod)
+							   ->with($this->equalTo($requestPath))
+							   ->will($this->returnValue($this->mockResponse));
+		}
 	}
 }

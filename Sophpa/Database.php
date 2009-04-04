@@ -4,6 +4,8 @@ require_once 'Sophpa/Resource.php';
 
 class Sophpa_Database implements Countable 
 {
+	const BULK_OPTION_ALL_OR_NOTHING = 'all_or_nothing';
+
 	const VIEW_OPTION_DESCENDING = 'descending';
 	const VIEW_OPTION_ENDKEY = 'endkey';
 	const VIEW_OPTION_ENDKEY_DOCID = 'endkey_docid';
@@ -18,8 +20,6 @@ class Sophpa_Database implements Countable
 	const VIEW_OPTION_STALE = 'stale';
 	const VIEW_OPTION_STARTKEY = 'startkey';
 	const VIEW_OPTION_STARTKEY_DOCID = 'startkey_docid';
-
-	const BULK_OPTION_ALL_OR_NOTHING = 'all_or_nothing';
 
 	/**
 	 * Contains options to be JSON encoded, used in encodeOptions()
@@ -182,7 +182,7 @@ class Sophpa_Database implements Countable
 
 	/**
 	 * Delete an array of documents. This is a "shortcut", instead manually adding
-	 * _deleted = true on each doc with bulkSave.
+	 * _deleted = true on each doc using bulkSave.
 	 *
 	 * @todo remove docs without _id?
 	 * @param array $docs

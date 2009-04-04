@@ -12,20 +12,28 @@ class Sophpa_Server
 	protected $resource;
 
 	/**
-	 * Cache of server generated uuids
+	 * Batch of server generated uuids
 	 *
 	 * @var array
 	 */
-	protected $uuidCache = array();
+	protected $uuidBatch = array();
+
+	/**
+	 * Number of UUIDs to save in the uuid batch 
+	 *
+	 * @var int
+	 */
+	protected $uuidBatchSize;
 
 	/**
 	 * Constructor
 	 *
 	 * @param Sophpa_Resource $resource
 	 */
-	public function __construct(Sophpa_Resource $resource)
+	public function __construct(Sophpa_Resource $resource, $uuidBatchSize = 10)
 	{
 		$this->resource = $resource;
+		$this->uuidBatchSize = $uuidBatchSize;
 	}
 
 	/**
@@ -106,12 +114,12 @@ class Sophpa_Server
 	 */
 	public function getUuid($count = 1)
 	{
-		if(count($this->uuidCache) < $count) {
-			$content = $this->resource->get('_uuids', array('count' => 10 + $count))->getContent();
-			$this->uuidCache += $content['uuids'];
+		if(count($this->uuidBatch) < $count) {
+			$content = $this->resource->get('_uuids', array('count' => $this->uuidBatchSize + $count))->getContent();
+			$this->uuidBatch += $content['uuids'];
 		}
 
-		return array_splice($this->uuidCache, 0, $count);
+		return array_splice($this->uuidBatch, 0, $count);
 	}
 
 	/**

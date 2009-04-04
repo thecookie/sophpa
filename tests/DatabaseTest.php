@@ -51,9 +51,9 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 
 	public function testShouldGetDbName()
 	{
-		$db = new Sophpa_Database($this->mockServer, 'test_database');
+		$db = $this->getDb();
 		
-		$this->assertEquals('test_database', $db->getName());
+		$this->assertEquals('db_name', $db->getName());
 	}
 
 	public function testShouldGetInfo()
@@ -62,7 +62,7 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 		$response = new Sophpa_Response(200, $this->responseHeader, $content);
 		$this->mockResource->expects($this->once())->method('get')->will($this->returnValue($response));
 			 
-		$db = new Sophpa_Database($this->mockServer, 'test_database');
+		$db = $this->getDb();
 		
 		$this->assertEquals(json_decode($content, true), $db->getInfo());
 	}
@@ -274,8 +274,13 @@ class Sophpa_DatabaseTest extends PHPUnit_Framework_TestCase
 						 ->with(0)
 						 ->will($this->returnValue(array()));
 
-		$db = new Sophpa_Database($this->mockServer, 'db_name');
+		$db = $this->getDb();
 		$db->bulkDelete($docs);
+	}
+
+	public function getDb()
+	{
+		return new Sophpa_Database($this->mockServer, 'db_name');
 	}
 }
 
